@@ -6,13 +6,21 @@ import os
 import random
 from dotenv import load_dotenv
 
+# .env 파일에서 DISCORD_TOKEN 불러오기
 load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
 
+# 파일 경로는 bot.py 위치 기준으로 절대 경로 사용
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+파일_경로 = os.path.join(BASE_DIR, "잔소리봇_data.json")
+
+# 디스코드 설정
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="/", intents=intents)
 tree = bot.tree
 
-지출_목록 = {}  # 사용자별 지출을 저장할 딕셔너리
+# 데이터 저장 구조
+지출_목록 = {}
 카테고리 = {}
 잔소리 = {}
 
@@ -36,7 +44,7 @@ tree = bot.tree
     ]
 }
 
-파일_경로 = "잔소리봇_data.json"
+# 데이터 저장 및 불러오기
 
 def 저장():
     with open(파일_경로, "w", encoding="utf-8") as f:
@@ -55,14 +63,16 @@ def 불러오기():
             카테고리 = 데이터.get("카테고리", {})
             잔소리 = 데이터.get("잔소리", {})
 
+# 봇 실행 시 동기화 및 데이터 불러오기
 @bot.event
 async def on_ready():
     global 잔소리
     if not 잔소리:
         잔소리 = 기본_잔소리.copy()
     await tree.sync()
-    print("✅ 봇 실행됨")
+    print(f"✅ 봇 실행됨: {bot.user}")
 
+# 명령어 정의
 @tree.command(name="지출", description="지출을 기록하고 잔소리를 들어보세요!")
 @app_commands.describe(금액="지출 금액", 내용="지출 내용")
 async def 지출(interaction: discord.Interaction, 금액: int, 내용: str):
@@ -76,9 +86,8 @@ async def 지출(interaction: discord.Interaction, 금액: int, 내용: str):
     잔소리문 = ""
     if 카테고리명 and 카테고리명 in 잔소리:
         잔소리문 = random.choice(잔소리[카테고리명])
-    else:
-        if "기타" in 잔소리 and 잔소리["기타"]:
-            잔소리문 = random.choice(잔소리["기타"])
+    elif "기타" in 잔소리 and 잔소리["기타"]:
+        잔소리문 = random.choice(잔소리["기타"])
 
     await interaction.response.send_message(f"💸 {금액}원 지출 등록됨! ({내용})\n{잔소리문}")
 
@@ -165,4 +174,7 @@ async def 도움말(interaction: discord.Interaction):
 
 불러오기()
 
-bot.run(os.getenv("DISCORD_TOKEN"))
+if not TOKEN:
+    raise ValueError("DISCORD_TOKEN이 .env에 설정되어 있지 않습니다.")
+
+bot.run(TOKEN)
