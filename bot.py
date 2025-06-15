@@ -5,6 +5,23 @@ import json
 import os
 import random
 from dotenv import load_dotenv
+from flask import Flask
+import threading
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "I'm alive"
+
+def run():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = threading.Thread(target=run)
+    t.start()
+
 
 # .env 파일에서 DISCORD_TOKEN 불러오기
 load_dotenv()
@@ -204,6 +221,11 @@ async def 도움말(interaction: discord.Interaction):
         "/잔소리목록 - 각 카테고리에 몇 개의 잔소리가 있는지 알려줘요"
     )
     await interaction.response.send_message(설명)
+f
+rom dotenv import load_dotenv
+load_dotenv()
+
+keep_alive()  # 웹서버 실행
 
 불러오기()
 
